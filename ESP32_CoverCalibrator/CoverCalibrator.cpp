@@ -214,8 +214,8 @@ void CoverCalibrator::savePosition() {
     preferences.putFloat("position", currentAngle);
     preferences.end();
 
-    // Only log at debug level 2 to avoid spam
-    DEBUG_PRINTF(2, "Position saved: %.1f°\n", currentAngle);
+    // Note: Commented out to avoid excessive logging on every position update
+    // DEBUG_PRINTF("Position saved: %.1f°\n", currentAngle);
 }
 
 // ============================================================================
