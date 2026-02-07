@@ -60,15 +60,36 @@ Install the following libraries via Arduino Library Manager:
 3. **WiFi** (built-in with ESP32 core) - WiFi connectivity
 4. **WebServer** (built-in with ESP32 core) - HTTP server for Alpaca
 
-### Configuration
+### WiFi Configuration
 
-Edit `Config.h` to configure your device:
+**No hardcoded passwords needed!** The device uses dynamic WiFi configuration:
+
+1. **First Boot**: Device starts in Access Point (AP) mode
+   - SSID: `CoverCalibrator_Setup`
+   - Password: `covercal123`
+   - IP: `192.168.4.1`
+
+2. **Connect** to the AP with your phone or computer
+
+3. **Navigate** to http://192.168.4.1/config
+
+4. **Configure** your WiFi network:
+   - Scan for available networks
+   - Select your network (or enter SSID manually)
+   - Enter WiFi password
+   - Click "Save and Connect"
+
+5. **Device Restarts** and connects to your WiFi
+
+6. **Find IP Address**: Check your router or use serial monitor
+
+**WiFi credentials are stored in ESP32 flash memory and persist across reboots!**
+
+### Cover Configuration
+
+Edit `Config.h` to configure cover angles and motion:
 
 ```cpp
-// WiFi Settings
-#define WIFI_SSID           "YourSSID"
-#define WIFI_PASSWORD       "YourPassword"
-
 // Cover Angles
 #define COVER_CLOSED_ANGLE  90.0f       // Fully closed position
 #define COVER_OPEN_ANGLE    180.0f      // Fully open position

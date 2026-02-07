@@ -25,23 +25,13 @@ https://www.arduino.cc/en/software
    - **ESP32Servo** by Kevin Harrington
    - **ArduinoJson** by Benoit Blanchon (version 6.x)
 
-## 4. Configure WiFi
-
-1. Open `ESP32_CoverCalibrator/Config.h`
-2. Edit these lines with your WiFi credentials:
-   ```cpp
-   #define WIFI_SSID           "YourSSID"
-   #define WIFI_PASSWORD       "YourPassword"
-   ```
-3. Save the file
-
-## 5. Open the Sketch
+## 4. Open the Sketch
 
 1. Go to **File → Open**
 2. Navigate to: `ESP32_CoverCalibrator/ESP32_CoverCalibrator.ino`
 3. Click Open
 
-## 6. Configure Board Settings
+## 5. Configure Board Settings
 
 1. Go to **Tools → Board → esp32 → ESP32S3 Dev Module**
 2. Configure these settings:
@@ -49,20 +39,51 @@ https://www.arduino.cc/en/software
    - **Upload Speed**: 921600
    - **Port**: Select your ESP32's COM port (Windows: COM3, COM4, etc. / Linux: /dev/ttyUSB0, etc.)
 
-## 7. Upload to ESP32
+## 6. Upload to ESP32
 
 1. Connect your ESP32-S3 to your computer via USB
 2. Click the **Upload** button (→ arrow at top)
 3. Wait for "Done uploading" message
 
-## 8. Test Serial Interface
+## 7. Configure WiFi (First Time Setup)
 
 1. Open **Tools → Serial Monitor**
 2. Set baud rate to **115200**
-3. You should see the startup message
-4. Type `help` and press Enter to see available commands
-5. Type `connect` to connect to the device
-6. Type `status` to see current state
+3. You'll see the device start in **AP Mode**:
+   ```
+   AP MODE - WiFi Configuration Required
+   SSID: CoverCalibrator_Setup
+   Password: covercal123
+   IP: 192.168.4.1
+   ```
+
+4. **On your phone or computer**:
+   - Connect to WiFi network: `CoverCalibrator_Setup`
+   - Password: `covercal123`
+   - Open web browser to: `http://192.168.4.1/config`
+
+5. **Configure WiFi**:
+   - Click "Scan WiFi Networks" to see available networks
+   - Click on your network name (or enter manually)
+   - Enter your WiFi password
+   - Click "Save and Connect"
+
+6. **Device will restart** and connect to your WiFi
+   - WiFi credentials are saved permanently!
+   - On next boot, it will connect automatically
+
+7. **Find new IP address** in Serial Monitor:
+   ```
+   WiFi connected successfully
+   IP address: 192.168.1.xxx
+   ```
+
+## 8. Test Serial Interface
+
+1. In Serial Monitor (baud rate **115200**)
+2. Type `help` and press Enter to see available commands
+3. Type `connect` to connect to the device
+4. Type `status` to see current state
 
 ## 9. Test Cover Movement
 
@@ -72,13 +93,23 @@ https://www.arduino.cc/en/software
 4. Type `close` to close the cover
 5. Type `status` to check current position
 
-## 10. Find IP Address for Alpaca
+## 10. Access Web Interface and Alpaca API
 
-1. In Serial Monitor, look for the WiFi connection message
-2. Note the IP address (e.g., `WiFi connected! IP: 192.168.1.100`)
-3. You can now access the Alpaca API at:
+Once connected to WiFi, you can access:
+
+1. **WiFi Configuration Page** (to change networks):
    ```
-   http://192.168.1.100:11111/api/v1/covercalibrator/0/
+   http://[device-ip]/config
+   ```
+
+2. **ASCOM Alpaca API**:
+   ```
+   http://[device-ip]:11111/api/v1/covercalibrator/0/
+   ```
+
+3. Test API with browser or curl:
+   ```bash
+   curl "http://192.168.1.xxx:11111/api/v1/covercalibrator/0/coverstate?ClientID=1&ClientTransactionID=1"
    ```
 
 ## Quick Commands Reference
@@ -120,9 +151,22 @@ coverstate#    - Get cover state
 - Try reducing upload speed to 115200
 
 ### WiFi won't connect
-- Double-check SSID and password in Config.h
+- Device will return to AP mode after 30 seconds if connection fails
+- Try reconfiguring via AP mode at http://192.168.4.1/config
 - Make sure 2.4GHz WiFi is available (ESP32 doesn't support 5GHz)
+- Check WiFi password is correct (case-sensitive!)
 - Serial interface still works without WiFi!
+
+### Can't access configuration page
+- Make sure you're connected to CoverCalibrator_Setup AP
+- Try http://192.168.4.1 (without /config first)
+- Check firewall isn't blocking connection
+- Try different browser (Chrome/Firefox)
+
+### Lost WiFi credentials / Want to reconfigure
+- Device returns to AP mode if WiFi fails for 30 seconds
+- Or manually reset: Type `angles 0 0` in serial (triggers settings reset on next boot)
+- Or reflash firmware (erases all saved settings)
 
 ### Servo doesn't move
 - Check power supply (4.8-6.8V for servo)

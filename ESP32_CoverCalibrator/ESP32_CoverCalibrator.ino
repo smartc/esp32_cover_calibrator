@@ -5,6 +5,7 @@
  * - Serial (USB) Interface - ASCOM compliant
  * - ASCOM Alpaca REST API Interface
  * - S-Curve motion control for smooth operation
+ * - Dynamic WiFi configuration with AP mode
  *
  * Hardware:
  *   - Board: ESP32-S3 (Waveshare ESP32-S3-DEV-KIT-NxR8)
@@ -17,18 +18,28 @@
  *   - Default: 90° (closed) to 180° (open)
  *   - Future: 0° to 270° range
  *   - Flat panel control (not yet implemented)
+ *   - Dynamic WiFi configuration via web interface
  *
  * Interfaces:
  *   - Serial: 115200 baud, ASCOM standard commands
  *   - Alpaca: REST API on port 11111
+ *   - Web UI: WiFi configuration at http://[ip]/config
+ *
+ * WiFi Configuration:
+ *   - On first boot, device starts in AP mode (SSID: CoverCalibrator_Setup)
+ *   - Connect to AP and navigate to http://192.168.4.1/config
+ *   - Configure WiFi credentials via web interface
+ *   - Credentials stored in ESP32 Preferences (persistent)
  *
  * Author: DIY Astronomy
- * Version: 1.0.0
+ * Version: 1.1.0
  * Date: 2026-02-07
  */
 
+#include <WebServer.h>
 #include "Config.h"
 #include "CoverCalibrator.h"
+#include "WiFiConfig.h"
 #include "ASCOMAlpaca.h"
 #include "SerialInterface.h"
 
@@ -36,8 +47,10 @@
 // GLOBAL OBJECTS
 // ============================================================================
 
+WebServer webServer(ALPACA_PORT);            // Shared web server for all interfaces
 CoverCalibrator coverCalibrator;
-ASCOMAlpaca alpacaServer(coverCalibrator);
+WiFiConfig wifiConfig(webServer);
+ASCOMAlpaca alpacaServer(coverCalibrator, webServer);
 SerialInterface serialInterface(coverCalibrator);
 
 // ============================================================================
@@ -60,16 +73,39 @@ void setup() {
     DEBUG_PRINTLN("Cover calibrator initialized");
     DEBUG_PRINTLN();
 
+    // Initialize WiFi configuration (loads credentials and connects)
+    DEBUG_PRINTLN("Initializing WiFi...");
+    wifiConfig.begin();
+
+    if (wifiConfig.isAPMode()) {
+        DEBUG_PRINTLN();
+        DEBUG_PRINTLN("═══════════════════════════════════════════════");
+        DEBUG_PRINTLN("    AP MODE - WiFi Configuration Required");
+        DEBUG_PRINTLN("═══════════════════════════════════════════════");
+        DEBUG_PRINTF("  SSID: %s\n", AP_SSID);
+        DEBUG_PRINTF("  Password: %s\n", AP_PASSWORD);
+        DEBUG_PRINTF("  IP: %s\n", wifiConfig.getIPAddress().c_str());
+        DEBUG_PRINTLN();
+        DEBUG_PRINTLN("  Connect to this network and navigate to:");
+        DEBUG_PRINTF("  http://%s/config\n", wifiConfig.getIPAddress().c_str());
+        DEBUG_PRINTLN("═══════════════════════════════════════════════");
+        DEBUG_PRINTLN();
+    } else if (wifiConfig.isConnected()) {
+        DEBUG_PRINTLN("WiFi connected successfully");
+        DEBUG_PRINTF("IP address: %s\n", wifiConfig.getIPAddress().c_str());
+        DEBUG_PRINTF("Signal strength: %d dBm\n", wifiConfig.getRSSI());
+    }
+    DEBUG_PRINTLN();
+
     // Initialize ASCOM Alpaca server
     DEBUG_PRINTLN("Initializing ASCOM Alpaca server...");
     alpacaServer.begin();
-    if (alpacaServer.isWiFiConnected()) {
-        DEBUG_PRINTLN("ASCOM Alpaca server initialized");
+    DEBUG_PRINTLN("ASCOM Alpaca server initialized");
+    if (wifiConfig.isConnected()) {
         DEBUG_PRINTF("Server address: http://%s:%d\n",
-                     alpacaServer.getIPAddress().c_str(), ALPACA_PORT);
-    } else {
-        DEBUG_PRINTLN("WARNING: WiFi not connected - Alpaca server unavailable");
-        DEBUG_PRINTLN("Serial interface will still work");
+                     wifiConfig.getIPAddress().c_str(), ALPACA_PORT);
+        DEBUG_PRINTF("Configuration: http://%s/config\n",
+                     wifiConfig.getIPAddress().c_str());
     }
     DEBUG_PRINTLN();
 
@@ -78,6 +114,9 @@ void setup() {
     DEBUG_PRINTLN("══════════════════════════════════════════════════");
     DEBUG_PRINTLN();
     DEBUG_PRINTLN("Device ready. Waiting for commands...");
+    if (!wifiConfig.isConnected() && !wifiConfig.isAPMode()) {
+        DEBUG_PRINTLN("NOTE: WiFi not connected - Serial interface available");
+    }
     DEBUG_PRINTLN();
 
     // Show status on startup
@@ -89,9 +128,12 @@ void setup() {
 // ============================================================================
 
 void loop() {
+    // Handle WiFi connection (non-blocking)
+    wifiConfig.handleWiFi();
+
     // Update all subsystems
     coverCalibrator.update();      // Update servo motion control
-    alpacaServer.update();         // Handle HTTP requests
+    webServer.handleClient();      // Handle HTTP requests (Alpaca + Config)
     serialInterface.update();      // Handle serial commands
 
     // Small delay to prevent CPU hogging

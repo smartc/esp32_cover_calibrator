@@ -47,9 +47,18 @@
 // ASCOM ALPACA CONFIGURATION
 // ============================================================================
 
+// WiFi Configuration (stored in Preferences, these are defaults)
+#define DEFAULT_WIFI_SSID       "YOUR_SSID"     // Default WiFi SSID (will use AP mode if not changed)
+#define DEFAULT_WIFI_PASSWORD   "YOUR_PASSWORD" // Default WiFi password
+#define SSID_SIZE               32              // Maximum SSID length
+#define PASSWORD_SIZE           64              // Maximum password length
+
+// Access Point Configuration (for initial setup or WiFi failure)
+#define AP_SSID                 "CoverCalibrator_Setup"  // AP mode SSID
+#define AP_PASSWORD             "covercal123"            // AP mode password (min 8 chars)
+#define AP_TIMEOUT              300000                   // AP timeout (5 minutes)
+
 // Network Configuration
-#define WIFI_SSID           "YourSSID"          // WiFi SSID (change as needed)
-#define WIFI_PASSWORD       "YourPassword"      // WiFi password (change as needed)
 #define ALPACA_PORT         11111               // ASCOM Alpaca default port
 #define ALPACA_DISCOVERY_PORT   32227           // ASCOM discovery port
 

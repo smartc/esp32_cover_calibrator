@@ -8,9 +8,9 @@
 // CONSTRUCTOR
 // ============================================================================
 
-ASCOMAlpaca::ASCOMAlpaca(CoverCalibrator& device)
+ASCOMAlpaca::ASCOMAlpaca(CoverCalibrator& device, WebServer& webServer)
     : coverCalibrator(device),
-      server(ALPACA_PORT),
+      server(webServer),
       serverTransactionID(0)
 {
 }
@@ -20,27 +20,7 @@ ASCOMAlpaca::ASCOMAlpaca(CoverCalibrator& device)
 // ============================================================================
 
 void ASCOMAlpaca::begin() {
-    DEBUG_PRINTLN("Starting ASCOM Alpaca interface...");
-
-    // Connect to WiFi
-    DEBUG_PRINTF("Connecting to WiFi SSID: %s\n", WIFI_SSID);
-    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-
-    int attempts = 0;
-    while (WiFi.status() != WL_CONNECTED && attempts < 20) {
-        delay(500);
-        DEBUG_PRINT(".");
-        attempts++;
-    }
-
-    if (WiFi.status() == WL_CONNECTED) {
-        DEBUG_PRINTLN("");
-        DEBUG_PRINTF("WiFi connected! IP: %s\n", WiFi.localIP().toString().c_str());
-    } else {
-        DEBUG_PRINTLN("");
-        DEBUG_PRINTLN("WiFi connection failed!");
-        return;
-    }
+    DEBUG_PRINTLN("Setting up ASCOM Alpaca API endpoints...");
 
     // Setup Management API endpoints
     server.on("/management/apiversions", HTTP_GET, [this]() { handleManagementVersions(); });
@@ -74,17 +54,8 @@ void ASCOMAlpaca::begin() {
     server.on((basePath + "haltcover").c_str(), HTTP_PUT, [this]() { handleHaltCover(); });
     server.on((basePath + "opencover").c_str(), HTTP_PUT, [this]() { handleOpenCover(); });
 
-    // Start server
-    server.begin();
-    DEBUG_PRINTF("ASCOM Alpaca server started on port %d\n", ALPACA_PORT);
-}
-
-// ============================================================================
-// UPDATE
-// ============================================================================
-
-void ASCOMAlpaca::update() {
-    server.handleClient();
+    // Note: Server is started by WiFiConfig, not here
+    DEBUG_PRINTLN("ASCOM Alpaca API endpoints registered");
 }
 
 // ============================================================================

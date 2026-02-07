@@ -22,15 +22,10 @@
 class ASCOMAlpaca {
 public:
     // Constructor
-    ASCOMAlpaca(CoverCalibrator& device);
+    ASCOMAlpaca(CoverCalibrator& device, WebServer& server);
 
     // Initialization
     void begin();
-    void update();  // Call in main loop to handle HTTP requests
-
-    // Connection status
-    bool isWiFiConnected() const { return WiFi.status() == WL_CONNECTED; }
-    String getIPAddress() const { return WiFi.localIP().toString(); }
 
 private:
     // ========================================================================
@@ -99,7 +94,7 @@ private:
     // ========================================================================
 
     CoverCalibrator& coverCalibrator;
-    WebServer server;
+    WebServer& server;
     uint32_t serverTransactionID;
 };
 
