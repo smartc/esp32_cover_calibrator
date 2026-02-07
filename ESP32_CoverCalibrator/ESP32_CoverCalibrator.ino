@@ -1,5 +1,5 @@
 /**
- * main.ino - ESP32 Cover Calibrator Main Sketch
+ * ESP32_CoverCalibrator.ino - ESP32 Cover Calibrator Main Sketch
  *
  * Telescope Cover Calibrator with DS3218 Servo Motor
  * - Serial (USB) Interface - ASCOM compliant

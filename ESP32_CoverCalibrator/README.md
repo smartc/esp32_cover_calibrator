@@ -53,12 +53,12 @@ This project implements a telescope cover calibrator using an ESP32-S3 microcont
 
 ### Required Libraries
 
-Install the following libraries via Arduino Library Manager or PlatformIO:
+Install the following libraries via Arduino Library Manager:
 
-1. **ESP32Servo** - Servo motor control for ESP32
-2. **WiFi** (built-in) - WiFi connectivity
-3. **WebServer** (built-in) - HTTP server for Alpaca
-4. **ArduinoJson** - JSON parsing and generation
+1. **ESP32Servo** (by Kevin Harrington) - Servo motor control for ESP32
+2. **ArduinoJson** (by Benoit Blanchon) - JSON parsing and generation
+3. **WiFi** (built-in with ESP32 core) - WiFi connectivity
+4. **WebServer** (built-in with ESP32 core) - HTTP server for Alpaca
 
 ### Configuration
 
@@ -78,21 +78,36 @@ Edit `Config.h` to configure your device:
 #define SCURVE_STEEPNESS    6.0f        // S-curve steepness (4.0-10.0)
 ```
 
-### Building and Uploading
+### Building and Uploading with Arduino IDE
 
-#### Using Arduino IDE
+1. **Install ESP32 Board Support**
+   - Open Arduino IDE
+   - Go to File → Preferences
+   - Add to "Additional Board Manager URLs": `https://espressif.github.io/arduino-esp32/package_esp32_index.json`
+   - Go to Tools → Board → Boards Manager
+   - Search for "esp32" and install "esp32 by Espressif Systems"
 
-1. Open `main/main.ino`
-2. Select board: "ESP32S3 Dev Module"
-3. Configure board settings:
-   - USB CDC On Boot: Enabled
-   - Upload Speed: 921600
-4. Upload to your ESP32-S3
+2. **Install Required Libraries**
+   - Go to Sketch → Include Library → Manage Libraries
+   - Search and install:
+     - ESP32Servo (by Kevin Harrington)
+     - ArduinoJson (by Benoit Blanchon, version 6.x)
 
-#### Using PlatformIO
+3. **Open the Sketch**
+   - Open `ESP32_CoverCalibrator/ESP32_CoverCalibrator.ino`
 
-1. Copy `platformio.ini` to project root (if not already present)
-2. Run: `pio run -t upload`
+4. **Configure Board Settings**
+   - Tools → Board → ESP32 Arduino → ESP32S3 Dev Module
+   - Tools → USB CDC On Boot → Enabled
+   - Tools → Upload Speed → 921600
+   - Tools → Port → (select your ESP32's COM port)
+
+5. **Configure WiFi**
+   - Edit `Config.h` and set your WiFi SSID and password
+
+6. **Upload**
+   - Click the Upload button (→)
+   - Wait for upload to complete
 
 ## Usage
 
@@ -262,16 +277,17 @@ This driver is designed to pass ASCOM Conform Universal testing for both Serial 
 ## File Structure
 
 ```
-main/
-├── main.ino                 - Main Arduino sketch
-├── Config.h                 - Configuration constants
-├── CoverCalibrator.h        - Cover calibrator class header
-├── CoverCalibrator.cpp      - Cover calibrator implementation
-├── ASCOMAlpaca.h           - Alpaca interface header
-├── ASCOMAlpaca.cpp         - Alpaca interface implementation
-├── SerialInterface.h        - Serial interface header
-├── SerialInterface.cpp      - Serial interface implementation
-└── README.md               - This file
+ESP32_CoverCalibrator/
+├── ESP32_CoverCalibrator.ino  - Main Arduino sketch
+├── Config.h                    - Configuration constants
+├── CoverCalibrator.h           - Cover calibrator class header
+├── CoverCalibrator.cpp         - Cover calibrator implementation
+├── ASCOMAlpaca.h               - Alpaca interface header
+├── ASCOMAlpaca.cpp             - Alpaca interface implementation
+├── SerialInterface.h           - Serial interface header
+├── SerialInterface.cpp         - Serial interface implementation
+├── README.md                   - This file
+└── ASCOM_TESTING.md            - ASCOM testing guide
 ```
 
 ## Troubleshooting
