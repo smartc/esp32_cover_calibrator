@@ -22,7 +22,7 @@
  *
  * Interfaces:
  *   - Serial: 115200 baud, ASCOM standard commands
- *   - Alpaca: REST API on port 11111
+ *   - Alpaca: REST API on port 80 (standard HTTP)
  *   - Web UI: WiFi configuration at http://[ip]/config
  *
  * WiFi Configuration:
@@ -102,9 +102,9 @@ void setup() {
     alpacaServer.begin();
     DEBUG_PRINTLN("ASCOM Alpaca server initialized");
     if (wifiConfig.isConnected()) {
-        DEBUG_PRINTF("Server address: http://%s:%d\n",
-                     wifiConfig.getIPAddress().c_str(), ALPACA_PORT);
-        DEBUG_PRINTF("Configuration: http://%s/config\n",
+        DEBUG_PRINTF("ASCOM Alpaca API: http://%s/api/v1/covercalibrator/0/\n",
+                     wifiConfig.getIPAddress().c_str());
+        DEBUG_PRINTF("WiFi Configuration: http://%s/config\n",
                      wifiConfig.getIPAddress().c_str());
     }
     DEBUG_PRINTLN();

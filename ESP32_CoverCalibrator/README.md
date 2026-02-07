@@ -192,7 +192,9 @@ The device responds to ASCOM Alpaca discovery broadcasts on UDP port 32227.
 
 #### REST API Endpoints
 
-Base URL: `http://<device-ip>:11111/api/v1/covercalibrator/0/`
+Base URL: `http://<device-ip>/api/v1/covercalibrator/0/`
+
+**Note:** Server runs on port 80 (standard HTTP). Configure your ASCOM client to use port 80.
 
 **Management Endpoints:**
 - `GET /management/apiversions` - Get supported API versions
@@ -226,16 +228,16 @@ Using curl:
 
 ```bash
 # Connect to device
-curl -X PUT "http://192.168.1.100:11111/api/v1/covercalibrator/0/connected?Connected=true&ClientID=1&ClientTransactionID=1"
+curl -X PUT "http://192.168.1.100/api/v1/covercalibrator/0/connected?Connected=true&ClientID=1&ClientTransactionID=1"
 
 # Open cover
-curl -X PUT "http://192.168.1.100:11111/api/v1/covercalibrator/0/opencover?ClientID=1&ClientTransactionID=2"
+curl -X PUT "http://192.168.1.100/api/v1/covercalibrator/0/opencover?ClientID=1&ClientTransactionID=2"
 
 # Get cover state
-curl "http://192.168.1.100:11111/api/v1/covercalibrator/0/coverstate?ClientID=1&ClientTransactionID=3"
+curl "http://192.168.1.100/api/v1/covercalibrator/0/coverstate?ClientID=1&ClientTransactionID=3"
 
 # Close cover
-curl -X PUT "http://192.168.1.100:11111/api/v1/covercalibrator/0/closecover?ClientID=1&ClientTransactionID=4"
+curl -X PUT "http://192.168.1.100/api/v1/covercalibrator/0/closecover?ClientID=1&ClientTransactionID=4"
 ```
 
 ## Motion Control
@@ -359,8 +361,9 @@ ESP32_CoverCalibrator/
 ### Alpaca API Errors
 
 - Verify device IP address
-- Check that port 11111 is accessible
+- Server runs on port 80 (standard HTTP - no port number needed in URLs)
 - Ensure ClientID and ClientTransactionID are included in requests
+- Configure ASCOM client to use port 80
 - Review serial debug output for error details
 
 ## Future Enhancements

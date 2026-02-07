@@ -59,7 +59,7 @@
 #define AP_TIMEOUT              300000                   // AP timeout (5 minutes)
 
 // Network Configuration
-#define ALPACA_PORT         11111               // ASCOM Alpaca default port
+#define ALPACA_PORT         80                  // HTTP port (ASCOM clients will be configured to use this)
 #define ALPACA_DISCOVERY_PORT   32227           // ASCOM discovery port
 
 // Device Information

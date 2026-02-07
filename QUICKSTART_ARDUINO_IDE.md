@@ -102,14 +102,14 @@ Once connected to WiFi, you can access:
    http://[device-ip]/config
    ```
 
-2. **ASCOM Alpaca API**:
+2. **ASCOM Alpaca API** (configure ASCOM client to use port 80):
    ```
-   http://[device-ip]:11111/api/v1/covercalibrator/0/
+   http://[device-ip]/api/v1/covercalibrator/0/
    ```
 
 3. Test API with browser or curl:
    ```bash
-   curl "http://192.168.1.xxx:11111/api/v1/covercalibrator/0/coverstate?ClientID=1&ClientTransactionID=1"
+   curl "http://192.168.1.xxx/api/v1/covercalibrator/0/coverstate?ClientID=1&ClientTransactionID=1"
    ```
 
 ## Quick Commands Reference
