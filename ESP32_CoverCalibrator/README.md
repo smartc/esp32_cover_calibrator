@@ -255,22 +255,45 @@ The cover uses S-curve motion for smooth acceleration and deceleration:
 
 ### Angle Configuration
 
-The cover position can be customized:
+The cover position can be customized and **settings are stored in non-volatile memory**:
 
 - **Default Closed**: 90°
 - **Default Open**: 180°
 - **Future Range**: 0-270° (full servo travel)
 
-To change angles via serial:
+#### Persistent Storage
+
+All configuration is automatically saved to ESP32 flash memory:
+- ✅ **Cover angles** (closed/open positions)
+- ✅ **Last known position** (prevents movement on startup)
+- ✅ **Survives power cycles** and firmware updates
+
+#### Changing Angles
+
+**Via Serial:**
 ```
 angles 90 180
 ```
+Settings are immediately saved to flash memory.
 
-Or modify `Config.h`:
+**Via Config.h (first boot only):**
 ```cpp
 #define COVER_CLOSED_ANGLE  90.0f
 #define COVER_OPEN_ANGLE    180.0f
 ```
+These are only used if no saved configuration exists.
+
+#### Startup Behavior
+
+**Important:** The cover **does NOT move** on startup!
+
+- Device restores last known position from memory
+- Servo is set to last position without physical movement
+- Cover state determined by last position:
+  - `CLOSED` if at closed angle
+  - `OPEN` if at open angle
+  - `UNKNOWN` if partially open (e.g., was halted mid-motion)
+- Cover only moves when you send a command (open/close)
 
 ## ASCOM Conform Testing
 

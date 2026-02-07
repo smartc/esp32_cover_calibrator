@@ -36,19 +36,33 @@ CoverCalibrator::CoverCalibrator()
 void CoverCalibrator::begin() {
     DEBUG_PRINTLN("Initializing CoverCalibrator...");
 
+    // Load configuration from preferences (angles and last position)
+    loadConfiguration();
+
     // Attach servo
     ESP32PWM::allocateTimer(0);
     servo.setPeriodHertz(SERVO_FREQ_HZ);
     servo.attach(SERVO_PIN, SERVO_MIN_US, SERVO_MAX_US);
 
-    // Initialize to closed position
-    setServoAngle(coverClosedAngle);
-    currentAngle = coverClosedAngle;
-    targetAngle = coverClosedAngle;
-    coverState = COVER_CLOSED;
+    // IMPORTANT: Do NOT move servo on startup!
+    // Just set the servo to the last known position without physically moving it
+    // This prevents unwanted movement on power-up
+    servo.writeMicroseconds(degreesToMicroseconds(currentAngle));
 
-    DEBUG_PRINTF("CoverCalibrator initialized. Closed: %.1f°, Open: %.1f°\n",
-                 coverClosedAngle, coverOpenAngle);
+    // Determine cover state based on last position
+    if (fabs(currentAngle - coverClosedAngle) < 1.0f) {
+        coverState = COVER_CLOSED;
+    } else if (fabs(currentAngle - coverOpenAngle) < 1.0f) {
+        coverState = COVER_OPEN;
+    } else {
+        coverState = COVER_UNKNOWN;  // Partially open/closed
+    }
+
+    DEBUG_PRINTF("CoverCalibrator initialized. Closed: %.1f°, Open: %.1f°, Current: %.1f°\n",
+                 coverClosedAngle, coverOpenAngle, currentAngle);
+    DEBUG_PRINTF("Cover state on startup: %d (%s)\n", coverState,
+                 coverState == COVER_CLOSED ? "CLOSED" :
+                 coverState == COVER_OPEN ? "OPEN" : "UNKNOWN");
 }
 
 // ============================================================================
@@ -132,6 +146,9 @@ void CoverCalibrator::haltCover() {
         isMoving = false;
         targetAngle = currentAngle;
 
+        // Save halted position
+        savePosition();
+
         // Determine new cover state based on position
         if (fabs(currentAngle - coverClosedAngle) < 1.0f) {
             coverState = COVER_CLOSED;
@@ -153,8 +170,52 @@ void CoverCalibrator::setCoverAngles(float closedAngle, float openAngle) {
 
     coverClosedAngle = closedAngle;
     coverOpenAngle = openAngle;
-    DEBUG_PRINTF("Cover angles updated. Closed: %.1f°, Open: %.1f°\n",
+    saveConfiguration();  // Save to preferences
+    DEBUG_PRINTF("Cover angles updated and saved. Closed: %.1f°, Open: %.1f°\n",
                  closedAngle, openAngle);
+}
+
+// ============================================================================
+// PERSISTENT STORAGE METHODS
+// ============================================================================
+
+void CoverCalibrator::loadConfiguration() {
+    preferences.begin("cover", true);  // Read-only
+
+    // Load cover angles (use defaults if not found)
+    coverClosedAngle = preferences.getFloat("closedAngle", COVER_CLOSED_ANGLE);
+    coverOpenAngle = preferences.getFloat("openAngle", COVER_OPEN_ANGLE);
+
+    // Load last known position (use closed angle as default)
+    currentAngle = preferences.getFloat("position", coverClosedAngle);
+    targetAngle = currentAngle;
+
+    preferences.end();
+
+    DEBUG_PRINTLN("Configuration loaded from preferences:");
+    DEBUG_PRINTF("  Closed angle: %.1f°\n", coverClosedAngle);
+    DEBUG_PRINTF("  Open angle: %.1f°\n", coverOpenAngle);
+    DEBUG_PRINTF("  Last position: %.1f°\n", currentAngle);
+}
+
+void CoverCalibrator::saveConfiguration() {
+    preferences.begin("cover", false);  // Read-write
+
+    preferences.putFloat("closedAngle", coverClosedAngle);
+    preferences.putFloat("openAngle", coverOpenAngle);
+
+    preferences.end();
+
+    DEBUG_PRINTLN("Configuration saved to preferences");
+}
+
+void CoverCalibrator::savePosition() {
+    preferences.begin("cover", false);  // Read-write
+    preferences.putFloat("position", currentAngle);
+    preferences.end();
+
+    // Only log at debug level 2 to avoid spam
+    DEBUG_PRINTF(2, "Position saved: %.1f°\n", currentAngle);
 }
 
 // ============================================================================
@@ -229,6 +290,9 @@ void CoverCalibrator::updateScurveMotion() {
         // Motion complete
         setServoAngle(motionEndAngle);
         isMoving = false;
+
+        // Save final position to preferences
+        savePosition();
 
         // Update cover state
         if (fabs(motionEndAngle - coverClosedAngle) < 1.0f) {

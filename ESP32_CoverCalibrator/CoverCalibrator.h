@@ -10,6 +10,7 @@
 
 #include <Arduino.h>
 #include <ESP32Servo.h>
+#include <Preferences.h>
 #include "Config.h"
 
 // ============================================================================
@@ -77,6 +78,11 @@ public:
     void setCoverAngles(float closedAngle, float openAngle);
     float getClosedAngle() const { return coverClosedAngle; }
     float getOpenAngle() const { return coverOpenAngle; }
+
+    // Persistent storage
+    void loadConfiguration();
+    void saveConfiguration();
+    void savePosition();
 
     // ========================================================================
     // CALIBRATOR CONTROL METHODS (Flat Panel - Not Yet Implemented)
@@ -146,6 +152,9 @@ private:
     // Timeout handling
     unsigned long motionTimeoutStart;
     bool motionTimedOut;
+
+    // Persistent storage
+    Preferences preferences;
 };
 
 #endif // COVER_CALIBRATOR_H
